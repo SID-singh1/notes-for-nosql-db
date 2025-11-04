@@ -1,69 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Notes Login</title>
-<style>
-body{
-  font-family:Poppins,Arial;
-  background:linear-gradient(135deg,#74ABE2,#5563DE);
-  height:100vh;display:flex;align-items:center;justify-content:center;
-}
-.card{
-  background:rgba(255,255,255,0.9);
-  padding:40px;border-radius:12px;
-  box-shadow:0 8px 20px rgba(0,0,0,.2);
-  width:320px;text-align:center;
-}
-h2{margin-bottom:20px;color:#333;}
-input,button{width:100%;padding:10px;margin:8px 0;border:none;border-radius:6px;}
-input{background:#f0f0f0;}
-button{background:#5563DE;color:#fff;font-weight:bold;cursor:pointer;}
-button:hover{background:#3949AB;}
-small{color:red;}
-</style>
-</head>
-<body>
-<div class="card">
-  <h2>Notes App</h2>
-  <input id="username" placeholder="Username">
-  <input id="password" type="password" placeholder="Password">
-  <button onclick="signup()">Sign Up</button>
-  <button onclick="login()">Login</button>
-  <small id="msg"></small>
-</div>
-<script>
-const API="http://localhost:5000/api";
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Notes Login</title>
+    <style>
+      body {
+        font-family: Poppins, Arial, sans-serif;
+        background: linear-gradient(135deg, #74abe2, #5563de);
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+      }
 
-async function signup(){
-  const username=document.getElementById('username').value.trim();
-  const password=document.getElementById('password').value.trim();
-  if(!username||!password)return alert('Fill all fields');
-  const res=await fetch(`${API}/signup`,{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({username,password})
-  });
-  if(res.ok){
-    const data=await res.json();
-    localStorage.setItem('user',data.user.username);
-    window.location='notes.html';
-  }else document.getElementById('msg').innerText='User exists';
-}
+      .card {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        width: 320px;
+        text-align: center;
+      }
 
-async function login(){
-  const username=document.getElementById('username').value.trim();
-  const password=document.getElementById('password').value.trim();
-  const res=await fetch(`${API}/login`,{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({username,password})
-  });
-  if(res.ok){
-    const data=await res.json();
-    localStorage.setItem('user',data.user.username);
-    window.location='notes.html';
-  }else document.getElementById('msg').innerText='Invalid credentials';
-}
-</script>
-</body>
+      h2 {
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      input,
+      button {
+        width: 100%;
+        padding: 10px;
+        margin: 8px 0;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+
+      input {
+        background: #f0f0f0;
+      }
+
+      button {
+        background: #5563de;
+        color: #fff;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      button:hover {
+        background: #3949ab;
+      }
+
+      small {
+        color: red;
+        display: block;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>Notes App</h2>
+      <input id="username" placeholder="Username" />
+      <input id="password" type="password" placeholder="Password" />
+      <button onclick="signup()">Sign Up</button>
+      <button onclick="login()">Login</button>
+      <small id="msg"></small>
+    </div>
+
+    <script>
+      const API = "/api"; // works both locally and on Render
+
+      async function signup() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
+
+        if (!username || !password) {
+          document.getElementById("msg").innerText =
+            "Please fill in all fields.";
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API}/signup`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            document.getElementById("msg").innerText =
+              data.message || "Signup failed.";
+            return;
+          }
+
+          document.getElementById("msg").innerText =
+            "Signup successful! Please login.";
+          document.getElementById("username").value = "";
+          document.getElementById("password").value = "";
+        } catch (err) {
+          console.error(err);
+          document.getElementById("msg").innerText = "Error during signup.";
+        }
+      }
+
+      async function login() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value.trim();
+
+        if (!username || !password) {
+          document.getElementById("msg").innerText =
+            "Please fill in all fields.";
+          return;
+        }
+
+        try {
+          const res = await fetch(`${API}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            document.getElementById("msg").innerText =
+              data.message || "Invalid credentials.";
+            return;
+          }
+
+          // ✅ Save user info to localStorage
+          localStorage.setItem("user", data.user.username);
+
+          // ✅ Redirect to notes page
+          window.location.href = "notes.html";
+        } catch (err) {
+          console.error(err);
+          document.getElementById("msg").innerText = "Error during login.";
+        }
+      }
+    </script>
+  </body>
 </html>
