@@ -1,56 +1,94 @@
 # 🗒️ User Notes App (NoSQL Digital Assignment - VIT Vellore)
 
-### 📚 Subject: NoSQL Databases  
-### 💻 Student: [Your Name] | Reg. No: [Your Reg. No]  
-### 🏫 Course Code: [If given in syllabus]
+### 📚 Subject: NoSQL Databases
+
+### 💻 Name: Siddhant Singh | Reg. No: 22BCE3522
+
+### 🏫 Course Code: BCSE406L
 
 ---
 
 ## 🚀 Overview
+
 This is a simple **User Notes App** built using **Node.js**, **Express.js**, and **MongoDB (NoSQL)** for the Digital Assignment.  
-It demonstrates CRUD operations on a **Document Database**, fulfilling the outcomes of **Module 3 & 4**.
+It demonstrates CRUD operations on a **Document Database**
+
+Each user can sign up, log in, and create personalized notes with customizable colors and color labels.
 
 ---
 
 ## ✨ Features
-- ➕ Add a new note for any user  
-- ✏️ Edit existing notes  
-- 🗑️ Delete notes  
-- 🔍 View all notes for a specific user  
-- 🌐 Fully dynamic per user (user-specific data retrieval)
+
+✅ User Authentication (Signup & Login)  
+✅ Create, Edit, and Delete Notes  
+✅ Choose Color from Predefined Palette  
+✅ Label Each Color (e.g. “Work”, “Personal”, “Urgent”)  
+✅ Search Notes by Content  
+✅ Sort Notes (Latest, Oldest, A–Z, Z–A)  
+✅ Responsive Card Layout (No Overlapping)  
+✅ MongoDB Document Modeling with Mongoose  
+✅ Timestamps (createdAt, updatedAt)
 
 ---
 
 ## 🧩 Tech Stack
-- **Backend:** Node.js, Express.js  
-- **Database:** MongoDB Atlas (Document Database)  
-- **Frontend:** HTML, JavaScript (Fetch API)  
-- **Deployment:** Render  
+
+| Layer           | Technology                        |
+| --------------- | --------------------------------- |
+| **Frontend**    | HTML, CSS, JavaScript (Fetch API) |
+| **Backend**     | Node.js, Express.js               |
+| **Database**    | MongoDB Atlas / Local MongoDB     |
+| **ORM**         | Mongoose                          |
+| **Environment** | dotenv                            |
+| **Deployment**  | Render / Localhost                |
 
 ---
 
-## ⚙️ API Routes
-| Method | Endpoint | Description |
-|--------|-----------|-------------|
-| `POST` | `/add` | Add a new note |
-| `GET` | `/notes/:user` | Get all notes for a user |
-| `PUT` | `/update/:id` | Edit an existing note |
-| `DELETE` | `/delete/:id` | Delete a note |
+## 🌐 API Endpoints
 
----
+All routes are prefixed with `/api`.
 
-## 🧠 Modules Covered
-- Module 3: Document Databases  
-- Module 4: Designing Document Databases  
-  - CRUD Operations  
-  - Data Modeling  
-  - Querying and Aggregation  
+| Method     | Endpoint           | Description                          |
+| ---------- | ------------------ | ------------------------------------ |
+| **POST**   | `/api/signup`      | Create a new user                    |
+| **POST**   | `/api/login`       | Authenticate user                    |
+| **GET**    | `/api/notes/:user` | Get all notes for a user             |
+| **POST**   | `/api/notes`       | Add a new note                       |
+| **PUT**    | `/api/notes/:id`   | Update note content, color, or label |
+| **DELETE** | `/api/notes/:id`   | Delete a note                        |
 
 ---
 
 ## 🪄 How to Run Locally
-```bash
+
+1. Clone the repo
+
 git clone https://github.com/<yourusername>/nosql-da.git
 cd nosql-da
+
+2. Install dependencies
+
 npm install
+
+3. create .env file
+
+inside project root, using Mongodb Atlas, add this
+
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/notesapp
+PORT=5000
+
+4. start the server
+
+npm start
+
+# or (if using nodemon)
+
+npm run dev
+
+# or
+
 node server.js
+
+5. open in brower
+
+http://localhost:5000/login.html
