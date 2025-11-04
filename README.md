@@ -61,23 +61,27 @@ All routes are prefixed with `/api`.
 
 ## 🪄 How to Run Locally
 
-1. Clone the repo
+Follow these steps to set up and run the app locally 👇
+
+---
+
+### 1️⃣ Clone the Repository
 
 git clone https://github.com/<yourusername>/nosql-da.git
 cd nosql-da
 
-2. Install dependencies
+### 2️⃣ Install Dependencies
 
 npm install
 
-3. create .env file
+### 3️⃣ Create .env File
 
 inside project root, using Mongodb Atlas, add this
 
 MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/notesapp
 PORT=5000
 
-4. start the server
+### 4️⃣ Start the Server
 
 npm start
 
@@ -89,6 +93,6 @@ npm run dev
 
 node server.js
 
-5. open in brower
+### 5️⃣ Open in Browser
 
 http://localhost:5000/login.html
