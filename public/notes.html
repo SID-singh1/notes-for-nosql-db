@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Notes — Palette + Labels</title>
+    <style>
+      :root {
+        --bg1: #667eea;
+        --bg2: #764ba2;
+      }
+      body {
+        margin: 0;
+        font-family: Poppins, Arial, sans-serif;
+        background: linear-gradient(135deg, var(--bg1), var(--bg2));
+        color: #222;
+      }
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 18px;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .left {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      input[type="text"] {
+        padding: 8px;
+        border-radius: 8px;
+        border: none;
+        outline: none;
+      }
+      select {
+        padding: 8px;
+        border-radius: 8px;
+        border: none;
+      }
+      .board {
+        padding: 18px;
+        min-height: calc(100vh - 70px);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 16px;
+      }
+      .card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 12px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        min-height: 140px;
+      }
+      .card textarea {
+        width: 100%;
+        border: none;
+        outline: none;
+        resize: none;
+        font-family: inherit;
+        font-size: 14px;
+        background: transparent;
+        flex: 1;
+      }
+      .meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+        gap: 8px;
+      }
+      .hashtag {
+        font-size: 13px;
+        color: #222;
+        background: rgba(255, 255, 255, 0.6);
+        padding: 4px 8px;
+        border-radius: 999px;
+      }
+      .controls button {
+        border: none;
+        background: #5563de;
+        color: #fff;
+        padding: 6px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-left: 6px;
+      }
+      .add-btn {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: #fff;
+        color: #333;
+        font-size: 28px;
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+      /* modal */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 999;
+      }
+      .modal {
+        width: 360px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      }
+      .palette {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+      .swatch {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        border: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .swatch.selected {
+        border-color: #222;
+      }
+      .swatch-label {
+        width: 100%;
+        margin-top: 6px;
+        font-size: 13px;
+        padding: 6px 8px;
+        border-radius: 8px;
+        border: 1px solid #eee;
+      }
+      .modal .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-top: 10px;
+      }
+      .modal .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .btn {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+      }
+      .btn.save {
+        background: #5563de;
+        color: #fff;
+      }
+      .btn.cancel {
+        background: #ddd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar">
+      <div class="left">
+        <strong id="welcome">Welcome</strong>
+        <input
+          id="searchBox"
+          type="text"
+          placeholder="Search content or color label..."
+          oninput="applyFilters()"
+        />
+        <select id="sort" onchange="applySort()">
+          <option value="latest">Latest</option>
+          <option value="oldest">Oldest</option>
+          <option value="az">A → Z</option>
+          <option value="za">Z → A</option>
+        </select>
+      </div>
+      <div>
+        <button onclick="logout()" class="btn">Logout</button>
+      </div>
+    </div>
+
+    <div class="board">
+      <div id="grid" class="grid"></div>
+    </div>
+
+    <button class="add-btn" onclick="openModal()">＋</button>
+
+    <!-- modal -->
+    <div id="modalBackdrop" class="modal-backdrop">
+      <div class="modal" role="dialog" aria-modal="true">
+        <h3 id="modalTitle">New Note</h3>
+
+        <!-- Palette + Labels for colors -->
+        <div style="font-size: 13px; color: #333; margin-top: 6px">
+          Choose a color and give it a label (color-label):
+        </div>
+
+        <div id="palette" class="palette">
+          <!-- swatches injected by JS -->
+        </div>
+
+        <input
+          id="swatchLabelInput"
+          class="swatch-label"
+          placeholder="Label this color (e.g. Ideas, Urgent)"
+        />
+
+        <div style="margin-top: 10px">
+          <textarea
+            id="modalContent"
+            rows="4"
+            placeholder="Note content..."
+            style="
+              width: 100%;
+              padding: 8px;
+              border-radius: 8px;
+              border: 1px solid #eee;
+            "
+          ></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn cancel" onclick="closeModal()">Cancel</button>
+          <button id="saveBtn" class="btn save" onclick="saveFromModal()">
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ---------------- Config ---------------- */
+      const API = "http://localhost:5000/api";
+      let user = localStorage.getItem("user");
+      if (!user) window.location = "login.html";
+      document.getElementById("welcome").innerText = `Welcome, ${user}`;
+
+      /* ---------------- State ---------------- */
+      let notes = []; // all notes loaded from server
+      let viewNotes = []; // filtered/sorted view
+      let editingId = null; // note id being edited or null
+      let selectedSwatch = null; // { color: "#ffd166", label: "Ideas" }
+
+      /* ---------------- Default palette (feel free to change) ---------------- */
+      const DEFAULT_PALETTE = [
+        { color: "#FFD166", label: "Idea" },
+        { color: "#06D6A0", label: "Work" },
+        { color: "#EF476F", label: "Urgent" },
+        { color: "#118AB2", label: "Info" },
+        { color: "#90BE6D", label: "Todo" },
+        { color: "#F9844A", label: "Later" },
+      ];
+
+      /* ---------------- Helpers ---------------- */
+      function noteTimestamp(n) {
+        if (n.createdAt) return new Date(n.createdAt).getTime();
+        try {
+          return parseInt(n._id.substring(0, 8), 16) * 1000;
+        } catch (e) {
+          return 0;
+        }
+      }
+
+      /* ---------------- UI: palette rendering ---------------- */
+      function renderPalette(custom = []) {
+        // take custom (unused for now) or default
+        const list = DEFAULT_PALETTE;
+        const palette = document.getElementById("palette");
+        palette.innerHTML = "";
+        list.forEach((s, idx) => {
+          const el = document.createElement("div");
+          el.className = "swatch";
+          el.style.background = s.color;
+          el.title = s.label || s.color;
+          el.dataset.color = s.color;
+          el.dataset.label = s.label || "";
+          el.onclick = () => selectSwatch(el);
+          palette.appendChild(el);
+        });
+        // preselect first by default
+        const first = palette.querySelector(".swatch");
+        if (first) selectSwatch(first);
+      }
+
+      function selectSwatch(el) {
+        document
+          .querySelectorAll(".swatch")
+          .forEach((x) => x.classList.remove("selected"));
+        el.classList.add("selected");
+        selectedSwatch = {
+          color: el.dataset.color,
+          label: el.dataset.label || "",
+        };
+        // set swatch label input to current label value
+        document.getElementById("swatchLabelInput").value =
+          selectedSwatch.label;
+      }
+
+      /* ---------------- Load notes from server ---------------- */
+      async function loadNotes() {
+        try {
+          const res = await fetch(`${API}/notes/${user}`);
+          notes = (await res.json()) || [];
+          // normalize to ensure fields exist
+          notes = notes.map((n) => ({
+            color: n.color || "#ffffff",
+            colorLabel: n.colorLabel || n.colorLabel || "",
+            content: n.content || "",
+            ...n,
+          }));
+          viewNotes = [...notes];
+          applySort(false);
+          renderGrid();
+        } catch (e) {
+          console.error("loadNotes failed", e);
+        }
+      }
+
+      /* ---------------- Render grid ---------------- */
+      function renderGrid(list = viewNotes) {
+        const grid = document.getElementById("grid");
+        grid.innerHTML = "";
+        if (!list.length) {
+          grid.innerHTML = `<div style="color:#fff;font-weight:700;padding:18px;">No notes — click + to add.</div>`;
+          return;
+        }
+        list.forEach((n) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.style.background = n.color || "#ffffff";
+
+          // content textarea (on change save)
+          const ta = document.createElement("textarea");
+          ta.value = n.content || "";
+          ta.onchange = () => updateNote(n._id, { content: ta.value });
+          card.appendChild(ta);
+
+          // meta
+          const meta = document.createElement("div");
+          meta.className = "meta";
+
+          // color-label hashtag area
+          const left = document.createElement("div");
+          const labelText = (n.colorLabel || "").trim();
+          const hash = document.createElement("div");
+          hash.className = "hashtag";
+          hash.textContent = labelText ? `#${labelText}` : "";
+          left.appendChild(hash);
+
+          // controls
+          const right = document.createElement("div");
+          right.className = "controls";
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "Edit";
+          editBtn.onclick = () => openModal(n._id);
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "Delete";
+          delBtn.style.background = "#ff5c5c";
+          delBtn.onclick = () => deleteNote(n._id);
+
+          right.appendChild(editBtn);
+          right.appendChild(delBtn);
+
+          meta.appendChild(left);
+          meta.appendChild(right);
+          card.appendChild(meta);
+          grid.appendChild(card);
+        });
+      }
+
+      /* ---------------- Modal open/close ---------------- */
+      function openModal(noteId = null) {
+        editingId = noteId;
+        // render palette
+        renderPalette();
+        // if edit, populate fields
+        const backdrop = document.getElementById("modalBackdrop");
+        const title = document.getElementById("modalTitle");
+        const swatchLabelInput = document.getElementById("swatchLabelInput");
+        const content = document.getElementById("modalContent");
+        if (noteId) {
+          const n = notes.find((x) => x._id === noteId);
+          title.textContent = "Edit Note";
+          // select swatch matching color if present
+          // if not matching any default swatch, create a temporary selectedSwatch
+          const matching = Array.from(
+            document.querySelectorAll(".swatch")
+          ).find(
+            (s) =>
+              s.dataset.color.toLowerCase() === (n.color || "").toLowerCase()
+          );
+          if (matching) selectSwatch(matching);
+          else {
+            // temporary selection object (custom color)
+            selectedSwatch = {
+              color: n.color || "#ffffff",
+              label: n.colorLabel || "",
+            };
+            document.getElementById("swatchLabelInput").value =
+              selectedSwatch.label || "";
+            // visually clear selection
+            document
+              .querySelectorAll(".swatch")
+              .forEach((x) => x.classList.remove("selected"));
+          }
+          document.getElementById("modalContent").value = n.content || "";
+        } else {
+          title.textContent = "New Note";
+          // default palette first selected by renderPalette
+          document.getElementById("modalContent").value = "";
+        }
+        backdrop.style.display = "flex";
+      }
+
+      function closeModal() {
+        document.getElementById("modalBackdrop").style.display = "none";
+        editingId = null;
+        selectedSwatch = null;
+      }
+
+      /* ---------------- Save from modal (create or update) ---------------- */
+      async function saveFromModal() {
+        // get the chosen swatch and label
+        const labelInput = (
+          document.getElementById("swatchLabelInput").value || ""
+        ).trim();
+        const content = (
+          document.getElementById("modalContent").value || ""
+        ).trim();
+
+        // if user edited the swatch label, use that; otherwise use selectedSwatch.label
+        const color = selectedSwatch ? selectedSwatch.color : "#ffffff";
+        const colorLabel =
+          labelInput || (selectedSwatch ? selectedSwatch.label : "");
+
+        try {
+          if (editingId) {
+            // update note
+            const res = await fetch(`${API}/notes/${editingId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ color, colorLabel, content }),
+            });
+            const updated = await res.json();
+            notes = notes.map((n) => (n._id === updated._id ? updated : n));
+          } else {
+            // create note
+            const res = await fetch(`${API}/notes`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ user, color, colorLabel, content }),
+            });
+            const created = await res.json();
+            notes.push(created);
+          }
+          closeModal();
+          applyFilters(); // re-apply filters & sort and render
+        } catch (e) {
+          console.error("save failed", e);
+        }
+      }
+
+      /* ---------------- Update/Delete ---------------- */
+      async function updateNote(id, patch) {
+        try {
+          const res = await fetch(`${API}/notes/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(patch),
+          });
+          const updated = await res.json();
+          notes = notes.map((n) => (n._id === updated._id ? updated : n));
+          applyFilters();
+        } catch (e) {
+          console.error("update failed", e);
+        }
+      }
+
+      async function deleteNote(id) {
+        if (!confirm("Delete this note?")) return;
+        try {
+          await fetch(`${API}/notes/${id}`, { method: "DELETE" });
+          notes = notes.filter((n) => n._id !== id);
+          applyFilters();
+        } catch (e) {
+          console.error("delete failed", e);
+        }
+      }
+
+      /* ---------------- Filters & Sort ---------------- */
+      function applyFilters() {
+        const q = (document.getElementById("searchBox").value || "")
+          .trim()
+          .toLowerCase();
+        viewNotes = notes.filter((n) => {
+          if (!q) return true;
+          const inContent = (n.content || "").toLowerCase().includes(q);
+          const inColorLabel = (n.colorLabel || "").toLowerCase().includes(q);
+          const inColorHex = (n.color || "").toLowerCase().includes(q);
+          return inContent || inColorLabel || inColorHex;
+        });
+        applySort(false);
+      }
+
+      function applySort(reRender = true) {
+        const mode = document.getElementById("sort").value || "latest";
+        viewNotes.sort((a, b) => {
+          if (mode === "latest") return noteTimestamp(b) - noteTimestamp(a);
+          if (mode === "oldest") return noteTimestamp(a) - noteTimestamp(b);
+          if (mode === "az")
+            return (a.content || "").localeCompare(b.content || "");
+          if (mode === "za")
+            return (b.content || "").localeCompare(a.content || "");
+          return 0;
+        });
+        renderGrid(viewNotes);
+      }
+
+      /* ---------------- Modal swatch label editing effect ---------------- */
+      document
+        .getElementById("swatchLabelInput")
+        .addEventListener("input", (e) => {
+          // update selectedSwatch label in-memory for visual consistency; will be saved on Save
+          const v = e.target.value.trim();
+          if (selectedSwatch) selectedSwatch.label = v;
+        });
+
+      /* ---------------- Init ---------------- */
+      renderPalette();
+      loadNotes();
+
+      /* close modal on click outside */
+      document
+        .getElementById("modalBackdrop")
+        .addEventListener("click", (ev) => {
+          if (ev.target.id === "modalBackdrop") closeModal();
+        });
+
+      /* ---------------- Logout ---------------- */
+      function logout() {
+        localStorage.removeItem("user");
+        window.location = "login.html";
+      }
+    </script>
+  </body>
+</html>
